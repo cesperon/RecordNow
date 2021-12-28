@@ -99,14 +99,22 @@ export default {
           duration: this.audio.duration,
           dateCreated: currentDate,
         });
+        store.dispatch("postRecording", {
+          id: this.recordingsList.length + 1,
+          audioBlob: this.audioBlob,
+          audioUrl: this.audioUrl,
+          audio: this.audio,
+          duration: this.audio.duration,
+          dateCreated: currentDate,
+        });
       });
       this.mediaRecorder.stop();
     },
     playRecord(num) {
-      this.recordingsList.forEach((obj) => {
-        obj.audio.pause();
-        obj.audio.currentTime = 0;
-      });
+      for (let record of this.recordingsList) {
+        record.audio.pause();
+        record.audio.currentTime = 0;
+      }
       console.log(this.recordingsList[num - 1]);
       const currentAudio = store.getters["userRecords"][num - 1].audio;
       currentAudio.play();
@@ -150,6 +158,7 @@ export default {
   cursor: pointer;
 }
 .button:hover {
+  border: 2px solid white;
   box-shadow: 5px 10px #888888;
 }
 

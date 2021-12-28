@@ -45,6 +45,7 @@ export default {
 
   .popup-inner {
     background: white;
+    color: rgb(103, 111, 163);
     padding: 32px;
     width: 200px;
     height: 200px;
@@ -52,13 +53,20 @@ export default {
     text-align: center;
     display: flex;
     flex-direction: column;
-    // margin-bottom: 500px;
+    align-items: center;
+    border: 2px solid black;
   }
   em {
     font-weight: bold;
   }
   .close {
     margin-top: 20px;
+    border-radius: 8px;
+    width: 25%;
+    background-color: rgb(103, 111, 163);
+    color: white;
+    cursor: pointer;
+    // margin: auto;
   }
 }
 </style>

@@ -1,12 +1,13 @@
 <template>
   <div class="home">
     <audioRecorder @openDetail="changeDetailState"></audioRecorder>
-    <div v-show="openDetail">
+    <div v-if="openDetail">
       <recordDetail
         :recording="recording"
         @closeDetail="changeDetailState"
       ></recordDetail>
     </div>
+    <button @click="callFirst">click me</button>
     <particles-bg color="#112031" type="cobweb" :bg="true" />
   </div>
 </template>
@@ -15,6 +16,7 @@
 import recordDetail from "@/components/RecordDetail.vue";
 import audioRecorder from "@/components/AudioRecorder.vue";
 import { ParticlesBg } from "particles-bg-vue";
+import store from "@/store";
 export default {
   name: "Home",
   components: {
@@ -34,6 +36,9 @@ export default {
       this.recording = recording;
       this.openDetail = !this.openDetail;
       // console.log("hi", recording);
+    },
+    callFirst() {
+      store.dispatch("postRecording", { id: 1, name: "h3llo" });
     },
   },
 };
