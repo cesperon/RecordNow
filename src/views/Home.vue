@@ -7,7 +7,6 @@
         @closeDetail="changeDetailState"
       ></recordDetail>
     </div>
-    <button @click="callFirst">click me</button>
     <particles-bg color="#112031" type="cobweb" :bg="true" />
   </div>
 </template>
@@ -30,15 +29,15 @@ export default {
       recording: null,
     };
   },
+  mounted() {
+    store.dispatch("getRecording");
+  },
   methods: {
     changeDetailState(recording) {
       console.log("hi", recording);
       this.recording = recording;
       this.openDetail = !this.openDetail;
       // console.log("hi", recording);
-    },
-    callFirst() {
-      store.dispatch("postRecording", { id: 1, name: "h3llo" });
     },
   },
 };

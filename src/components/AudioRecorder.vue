@@ -16,12 +16,12 @@
     </div> -->
     <div v-for="recording in recordingsList" :key="recording.id">
       <div class="recording">
-        <span>Recording {{ recording.id }}</span>
+        <span>Recording {{ recording.name }}</span>
         <div class="recordingActions">
           <button class="playButton" @click="playRecord(recording.id)"></button>
           <button
             class="deleteButton"
-            @click="deleteRecord(recording.id)"
+            @click="deleteRecord(recording)"
           ></button>
           <button class="infoButton" @click="openDetail(recording)"></button>
         </div>
@@ -48,7 +48,6 @@ export default {
       audioUrl: null,
       audioBlob: null,
       audioDuration: null,
-      //   searchText: "",
     };
   },
   async mounted() {
@@ -63,12 +62,6 @@ export default {
     recordingsLength() {
       return this.recordingsList.length;
     },
-    // filteredList() {
-    //   return this.recordingsList.filter((record) => {
-    //     // console.log("record", record.id);
-    //     return record.id == this.searchText;
-    //   });
-    // },
   },
   methods: {
     openDetail(recording) {
@@ -87,40 +80,54 @@ export default {
     },
     async stopRecord() {
       this.mediaRecorder.addEventListener("stop", () => {
-        this.audioBlob = new Blob(this.audioChunks);
-        this.audioUrl = URL.createObjectURL(this.audioBlob);
-        this.audio = new Audio(this.audioUrl);
-        const currentDate = new Date();
-        store.dispatch("addRecord", {
-          id: this.recordingsList.length + 1,
-          audioBlob: this.audioBlob,
-          audioUrl: this.audioUrl,
-          audio: this.audio,
-          duration: this.audio.duration,
-          dateCreated: currentDate,
-        });
-        store.dispatch("postRecording", {
-          id: this.recordingsList.length + 1,
-          audioBlob: this.audioBlob,
-          audioUrl: this.audioUrl,
-          audio: this.audio,
-          duration: this.audio.duration,
-          dateCreated: currentDate,
-        });
+        this.audioBlob = new Blob(this.audioChunks, { type: "audio/wav" });
+        // this.audioUrl = URL.createObjectURL(this.audioBlob);
+        // this.audio = new Audio(this.audioUrl);
+        // const currentDate = new Date();
+        console.log("audioBlob", this.audioBlob);
+
+        let formData = new FormData();
+        formData.append("name", `Recording${this.recordingsList.length + 1}`);
+        formData.append("audioBlob", this.audioBlob);
+        console.log("formData", formData);
+        // const newRecord = {
+        //   name: `Recording ${this.recordingsList.length + 1}`,
+        //   audioBlob: this.audioBlob,
+        //   audioUrl: this.audioUrl,
+        //   audio: this.audio,
+        //   duration: this.audio.duration,
+        //   dateCreated: currentDate,
+        // };
+        // console.log("new recording", newRecord);
+        store.dispatch("postRecording", formData);
       });
       this.mediaRecorder.stop();
     },
-    playRecord(num) {
-      for (let record of this.recordingsList) {
-        record.audio.pause();
-        record.audio.currentTime = 0;
-      }
-      console.log(this.recordingsList[num - 1]);
-      const currentAudio = store.getters["userRecords"][num - 1].audio;
-      currentAudio.play();
+    playRecord() {
+      // for (let record of this.recordingsList) {
+      //   record.audio.pause();
+      //   record.audio.currentTime = 0;
+      // }
+      // console.log(this.recordingsList[num - 1]);
+      // const currentAudio = store.getters["userRecords"].filter((record) => {
+      //   return num == record.id;
+      // })[0].blobFile;
+      const myAudio = store.getters["userRecords"][0];
+      const audioUrl = URL.createObjectURL(myAudio);
+      const audio = new Audio(audioUrl);
+      audio.play();
+      console.log("myAudio", myAudio);
+      // const audioBlob = currentAudio;
+      // console.log("currentAudio", audioBlob, "type", typeof audioBlob);
+      // const audioUrl = URL.createObjectURL(audioBlob, { type: "audio/wav" });
+      // console.log("audioUrl", audioUrl);
+      // const audio = new Audio(audioUrl);
+      // audio.play();
+      // console.log(currentAudio);
+      // currentAudio.play();
     },
     deleteRecord(id) {
-      store.dispatch("deleteRecord", id);
+      store.dispatch("deleteRecording", id);
     },
     changeRecordState() {
       if (this.recordState === false) {

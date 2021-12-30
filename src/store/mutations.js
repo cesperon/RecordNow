@@ -1,4 +1,7 @@
 export default {
+  setRecords(state, records) {
+    state.recordings = records;
+  },
   addRecord(state, record) {
     state.recordings.push(record);
   },
