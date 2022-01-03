@@ -6,8 +6,6 @@ export default {
     try {
       const res = await axios.get("/records");
       const recordings = res.data.data;
-      console.log("myData", recordings);
-
       //convert base encode 64 response to audio object for each blob in recordings array
       const blobFiles = recordings.map((records) => {
         const raw = window.atob(records);
@@ -22,8 +20,6 @@ export default {
         const audio = new Audio(audioUrl);
 
         //call api to get mapped record names
-        // const names = await axios.get("/records/names");
-        //each mapped element will be an object with audio object name and id
         return audio;
       });
 
@@ -35,7 +31,6 @@ export default {
   async getRecordNames() {
     try {
       const names = await axios.get("/records/names");
-      console.log("recordNames", names);
       this.commit("setRecordNames", names.data.data);
     } catch (err) {
       console.log(err);
@@ -67,10 +62,11 @@ export default {
   },
   async deleteRecording(state, record) {
     try {
+      console.log("fieldName", record.fileName);
       const res = await axios.post("/records/delete", {
         fileName: record.fileName,
       });
-      this.commit("deleteRecord", record.index);
+      this.commit("deleteRecord", record.fileName);
       console.log(res);
     } catch (err) {
       console.log("error in deleteRecording", err);

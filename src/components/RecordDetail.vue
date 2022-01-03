@@ -35,12 +35,6 @@ export default {
       editButton: null,
     };
   },
-  computed: {
-    recordDuration() {
-      console.log("duration", this.recording.duration);
-      return this.record.audio.duration;
-    },
-  },
   methods: {
     closeDetail() {
       this.$emit("closeDetail");
@@ -59,7 +53,6 @@ export default {
           .toISOString()
           .replace(/:/g, "-")}`;
         this.editNameValue = this.trimRecordName(newName);
-        console.log(newName, this.record.name);
         store.dispatch("updateRecordingName", {
           ogName: this.record.name,
           newName: newName,

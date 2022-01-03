@@ -13,8 +13,10 @@ export default {
   updateRecord(state, record) {
     state.recordingNames[record.index] = record.name;
   },
-  deleteRecord(state, recordId) {
-    let index = state.recordings.findIndex((p) => p.id == recordId);
+  deleteRecord(state, recordName) {
+    let index = state.recordingNames.findIndex((p) => p == recordName);
+    //remove recordings from local state
     state.recordings.splice(index, 1);
+    state.recordingNames.splice(index, 1);
   },
 };
