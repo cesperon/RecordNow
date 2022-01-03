@@ -5,25 +5,29 @@
       id="recordButton"
       @click="changeRecordState"
     ></button>
+    <div v-if="subFormOpen">
+      <subForm
+        @closeSubForm="changeSubFormState"
+        :audioChunks="this.audioChunks"
+        :mediaRecorder="this.mediaRecorder"
+      ></subForm>
+    </div>
+
     <div id="recordButtonText">Press to Record</div>
-    <!-- <div>
-      <input
-        v-model="searchText"
-        type="text"
-        placeholder="search by id number"
-      />
-      <span>{{ recordingsLength }} total recordings</span>
-    </div> -->
-    <div v-for="recording in recordingsList" :key="recording.id">
+    <span>{{ recordingsLength }} total recordings</span>
+    <div v-for="(recording, index) in recordingsList" :key="index">
       <div class="recording">
-        <span>Recording {{ recording.name }}</span>
+        <span>{{ trimRecordName(recordingNames[index]) }}</span>
         <div class="recordingActions">
-          <button class="playButton" @click="playRecord(recording.id)"></button>
+          <button class="playButton" @click="playRecord(index)"></button>
           <button
             class="deleteButton"
-            @click="deleteRecord(recording)"
+            @click="deleteRecord(recordingNames[index], index)"
           ></button>
-          <button class="infoButton" @click="openDetail(recording)"></button>
+          <button
+            class="infoButton"
+            @click="openDetail(recording, recordingNames[index])"
+          ></button>
         </div>
       </div>
     </div>
@@ -32,10 +36,11 @@
 
 <script>
 import store from "@/store";
+import subForm from "@/components/submissionForm.vue";
 
 export default {
   name: "audioRecorder",
-  components: {},
+  components: { subForm },
   data() {
     return {
       recordState: false,
@@ -44,10 +49,7 @@ export default {
       allRecords: [],
       audioChunks: [],
       mediaRecorder: null,
-      audio: null,
-      audioUrl: null,
-      audioBlob: null,
-      audioDuration: null,
+      subFormOpen: false,
     };
   },
   async mounted() {
@@ -59,14 +61,24 @@ export default {
       console.log(this.allRecords);
       return store.getters["userRecords"];
     },
+    recordingNames() {
+      return store.getters["recordNames"];
+    },
     recordingsLength() {
       return this.recordingsList.length;
     },
   },
   methods: {
-    openDetail(recording) {
+    changeSubFormState() {
+      this.subFormOpen = !this.subFormOpen;
+    },
+    trimRecordName(name) {
+      return name.split("-")[0];
+    },
+    openDetail(recording, recordName) {
       console.log("hi", recording);
-      this.$emit("openDetail", recording);
+      const record = { audio: recording, name: recordName };
+      this.$emit("openDetail", record);
     },
     async recordAudio() {
       this.audioChunks = [];
@@ -78,57 +90,20 @@ export default {
       });
       this.mediaRecorder.start();
     },
-    async stopRecord() {
-      this.mediaRecorder.addEventListener("stop", () => {
-        this.audioBlob = new Blob(this.audioChunks, { type: "audio/wav" });
-        // this.audioUrl = URL.createObjectURL(this.audioBlob);
-        // this.audio = new Audio(this.audioUrl);
-        // const currentDate = new Date();
-        console.log("audioBlob", this.audioBlob);
-
-        let formData = new FormData();
-        formData.append("name", `Recording${this.recordingsList.length + 1}`);
-        formData.append("audioBlob", this.audioBlob);
-        console.log("formData", formData);
-        // const newRecord = {
-        //   name: `Recording ${this.recordingsList.length + 1}`,
-        //   audioBlob: this.audioBlob,
-        //   audioUrl: this.audioUrl,
-        //   audio: this.audio,
-        //   duration: this.audio.duration,
-        //   dateCreated: currentDate,
-        // };
-        // console.log("new recording", newRecord);
-        store.dispatch("postRecording", formData);
-      });
-      this.mediaRecorder.stop();
+    playRecord(num) {
+      //stop all playing records before playing another recording
+      for (let record of this.recordingsList) {
+        record.pause();
+        record.currentTime = 0;
+      }
+      store.getters["userRecords"][num].play();
+      console.log("played");
     },
-    playRecord() {
-      // for (let record of this.recordingsList) {
-      //   record.audio.pause();
-      //   record.audio.currentTime = 0;
-      // }
-      // console.log(this.recordingsList[num - 1]);
-      // const currentAudio = store.getters["userRecords"].filter((record) => {
-      //   return num == record.id;
-      // })[0].blobFile;
-      const myAudio = store.getters["userRecords"][0];
-      const audioUrl = URL.createObjectURL(myAudio);
-      const audio = new Audio(audioUrl);
-      audio.play();
-      console.log("myAudio", myAudio);
-      // const audioBlob = currentAudio;
-      // console.log("currentAudio", audioBlob, "type", typeof audioBlob);
-      // const audioUrl = URL.createObjectURL(audioBlob, { type: "audio/wav" });
-      // console.log("audioUrl", audioUrl);
-      // const audio = new Audio(audioUrl);
-      // audio.play();
-      // console.log(currentAudio);
-      // currentAudio.play();
+    //remove a record from server file system using record name to query files
+    deleteRecord(fileName, index) {
+      store.dispatch("deleteRecording", { fileName: fileName, index: index });
     },
-    deleteRecord(id) {
-      store.dispatch("deleteRecording", id);
-    },
+    //animate microphone button on click events and change recording state
     changeRecordState() {
       if (this.recordState === false) {
         this.recordState = true;
@@ -138,7 +113,7 @@ export default {
         this.recordButtonText.textContent = "Press to Stop";
       } else {
         this.recordState = false;
-        this.stopRecord();
+        this.changeSubFormState();
         this.recordButton.classList.remove("buttonOff");
         this.recordButton.classList.add("button");
         this.recordButtonText.textContent = "Press to Record ";
@@ -148,8 +123,32 @@ export default {
 };
 </script>
 <style scoped lang="scss">
+@media screen and (max-width: 768px) {
+  .recording {
+    margin-left: 10%;
+    margin-right: 10%;
+  }
+}
+@media only screen and (min-width: 768px) {
+  .recording {
+    margin-left: 20%;
+    margin-right: 20%;
+  }
+}
+@media only screen and (min-width: 968px) {
+  .recording {
+    margin-left: 30%;
+    margin-right: 30%;
+  }
+}
+@media only screen and (min-width: 1600px) {
+  .recording {
+    margin-left: 40%;
+    margin-right: 40%;
+  }
+}
+
 .container {
-  height: 00px;
   flex-direction: row;
   justify-content: center;
 }
@@ -186,21 +185,21 @@ export default {
 .recording {
   display: flex;
   flex-direction: row;
-  justify-content: center;
   margin-top: 20px;
   border: 2px solid black;
-  margin-left: 40%;
-  margin-right: 40%;
   gap: 10px;
   align-items: center;
   background: rgb(103, 111, 163);
   color: white;
   border-radius: 8px;
-  height: 40px;
+  height: 50px;
   padding: 0 10px 0 10px;
 }
 .recordingActions {
   margin-left: auto;
+}
+#recordButtonText {
+  margin-bottom: 10px;
 }
 .playButton {
   width: 50px;

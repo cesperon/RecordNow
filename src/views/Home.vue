@@ -3,7 +3,7 @@
     <audioRecorder @openDetail="changeDetailState"></audioRecorder>
     <div v-if="openDetail">
       <recordDetail
-        :recording="recording"
+        :record="record"
         @closeDetail="changeDetailState"
       ></recordDetail>
     </div>
@@ -26,18 +26,19 @@ export default {
   data() {
     return {
       openDetail: false,
-      recording: null,
+      record: null,
     };
   },
   mounted() {
     store.dispatch("getRecording");
+    store.dispatch("getRecordNames");
   },
   methods: {
     changeDetailState(recording) {
       console.log("hi", recording);
-      this.recording = recording;
+      this.record = recording;
+
       this.openDetail = !this.openDetail;
-      // console.log("hi", recording);
     },
   },
 };

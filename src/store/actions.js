@@ -1,60 +1,79 @@
 const axios = require("axios").default;
+import store from "@/store";
 
 export default {
   async getRecording() {
     try {
       const res = await axios.get("/records");
       const recordings = res.data.data;
-      console.log("recordings", recordings);
+      console.log("myData", recordings);
+
+      //convert base encode 64 response to audio object for each blob in recordings array
       const blobFiles = recordings.map((records) => {
         const raw = window.atob(records);
         const binaryData = new Uint8Array(new ArrayBuffer(raw.length));
         for (let i = 0; i < raw.length; i++) {
           binaryData[i] = raw.charCodeAt(i);
         }
+
+        //build audio object to be store in state
         const blob = new Blob([binaryData], { type: "audio/wav" });
-        return blob;
+        const audioUrl = URL.createObjectURL(blob);
+        const audio = new Audio(audioUrl);
+
+        //call api to get mapped record names
+        // const names = await axios.get("/records/names");
+        //each mapped element will be an object with audio object name and id
+        return audio;
       });
-      console.log("blobfile", blobFiles);
+
       this.commit("setRecords", blobFiles);
-      // const raw = window.atob(recordings);
-      // const binaryData = new Uint8Array(new ArrayBuffer(raw.length));
-      // for (let i = 0; i < raw.length; i++) {
-      //   binaryData[i] = raw.charCodeAt(i);
-      // }
-      // const blob = new Blob([binaryData], { type: "audio/wav" });
-      // console.log("recordings", recordings);
-      // // this.commit("setRecords", recordings);
-      // this.commit("addRecord", blob);
-      // console.log(res);
     } catch (err) {
       console.log("error in getRecording", err);
     }
   },
+  async getRecordNames() {
+    try {
+      const names = await axios.get("/records/names");
+      console.log("recordNames", names);
+      this.commit("setRecordNames", names.data.data);
+    } catch (err) {
+      console.log(err);
+    }
+  },
   async postRecording(state, record) {
     try {
-      console.log("records", record);
-      const res = await axios.post("/records", record, {
+      this.commit("addRecord", record.record);
+      await axios.post("/records", record.formdata, {
         headers: { contentType: "multipart/form-data" },
       });
-      console.log("postRecording", res);
-      this.commit("addRecord", record);
-      console.log(res);
     } catch (err) {
       console.log("error in postRecording", err);
     }
   },
-  async deleteRecording(state, id) {
+  async updateRecordingName(state, record) {
     try {
-      console.log("id", id);
-      const res = await axios.post("/records/delete", id);
-      this.commit("deleteRecord", id);
+      const indexOfReplace = store.getters["recordNames"].indexOf(
+        record.ogName
+      );
+      console.log(indexOfReplace, record.newName);
+      this.commit("updateRecord", {
+        name: record.newName,
+        index: indexOfReplace,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  },
+  async deleteRecording(state, record) {
+    try {
+      const res = await axios.post("/records/delete", {
+        fileName: record.fileName,
+      });
+      this.commit("deleteRecord", record.index);
       console.log(res);
     } catch (err) {
       console.log("error in deleteRecording", err);
     }
-  },
-  deleteRecord(state, recordId) {
-    this.commit("deleteRecord", recordId);
   },
 };

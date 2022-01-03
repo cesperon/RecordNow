@@ -2,11 +2,15 @@
   <div class="popup">
     <div class="popup-inner form text-center justify-content-center">
       <span><strong>Record Name</strong></span>
-      <span>record {{ recording.id }}</span>
+      <div v-if="editName">
+        <input type="text" v-model="editNameValue" />
+      </div>
+      <span v-if="!editName">{{ editNameValue }}</span>
+      <div class="edit" @click="editNameOn">edit</div>
+      <span><strong>File Name</strong></span>
+      <span>{{ record.name }}</span>
       <span><strong>Record Duration</strong></span>
-      <span>{{ recording.audio.duration }}</span>
-      <span><strong>Created On</strong></span>
-      <span>{{ recording.dateCreated }}</span>
+      <span>{{ record.audio.duration }} seconds</span>
       <span></span>
       <span></span>
       <span></span>
@@ -16,15 +20,51 @@
 </template>
 
 <script>
+import store from "@/store";
 export default {
   name: "RecordDetail",
-  props: ["recording"],
+  props: ["record"],
+  mounted() {
+    this.editNameValue = this.trimRecordName(this.record.name);
+    this.editButton = document.querySelector(".edit");
+  },
   data() {
-    return {};
+    return {
+      editName: false,
+      editNameValue: "",
+      editButton: null,
+    };
+  },
+  computed: {
+    recordDuration() {
+      console.log("duration", this.recording.duration);
+      return this.record.audio.duration;
+    },
   },
   methods: {
     closeDetail() {
       this.$emit("closeDetail");
+    },
+    trimRecordName(name) {
+      return name.split("-")[0];
+    },
+    editNameOn() {
+      this.editName
+        ? (this.editButton.textContent = "edit")
+        : (this.editButton.textContent = "save");
+      this.editName = !this.editName;
+      if (!this.editName) {
+        // console.log(true);
+        const newName = `${this.editNameValue}-${new Date()
+          .toISOString()
+          .replace(/:/g, "-")}`;
+        this.editNameValue = this.trimRecordName(newName);
+        console.log(newName, this.record.name);
+        store.dispatch("updateRecordingName", {
+          ogName: this.record.name,
+          newName: newName,
+        });
+      }
     },
   },
 };
@@ -67,6 +107,13 @@ export default {
     color: white;
     cursor: pointer;
     // margin: auto;
+  }
+  .edit {
+    border-radius: 8px;
+    width: 25%;
+    background-color: rgb(103, 111, 163);
+    color: white;
+    cursor: pointer;
   }
 }
 </style>
