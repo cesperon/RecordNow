@@ -17,17 +17,14 @@
     <span>{{ recordingsLength }} total recordings</span>
     <div v-for="(recording, index) in recordingsList" :key="index">
       <div class="recording">
-        <span>{{ trimRecordName(recordingNames[index]) }}</span>
+        <span>{{ trimRecordName(recording.name) }}</span>
         <div class="recordingActions">
           <button class="playButton" @click="playRecord(index)"></button>
           <button
             class="deleteButton"
-            @click="deleteRecord(recordingNames[index], index)"
+            @click="deleteRecord(recording.name)"
           ></button>
-          <button
-            class="infoButton"
-            @click="openDetail(recording, recordingNames[index])"
-          ></button>
+          <button class="infoButton" @click="openDetail(recording)"></button>
         </div>
       </div>
     </div>
@@ -61,9 +58,6 @@ export default {
       console.log(this.allRecords);
       return store.getters["userRecords"];
     },
-    recordingNames() {
-      return store.getters["recordNames"];
-    },
     recordingsLength() {
       return this.recordingsList.length;
     },
@@ -75,9 +69,7 @@ export default {
     trimRecordName(name) {
       return name.split("-")[0];
     },
-    openDetail(recording, recordName) {
-      console.log("hi", recording);
-      const record = { audio: recording, name: recordName };
+    openDetail(record) {
       this.$emit("openDetail", record);
     },
     async recordAudio() {
@@ -93,15 +85,15 @@ export default {
     playRecord(num) {
       //stop all playing records before playing another recording
       for (let record of this.recordingsList) {
-        record.pause();
-        record.currentTime = 0;
+        record.audio.pause();
+        record.audio.currentTime = 0;
       }
-      store.getters["userRecords"][num].play();
+      store.getters["userRecords"][num].audio.play();
       console.log("played");
     },
     //remove a record from server file system using record name to query files
-    deleteRecord(fileName, index) {
-      store.dispatch("deleteRecording", { fileName: fileName, index: index });
+    deleteRecord(fileName) {
+      store.dispatch("deleteRecording", fileName);
     },
     //animate microphone button on click events and change recording state
     changeRecordState() {

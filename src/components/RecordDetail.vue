@@ -25,6 +25,7 @@ export default {
   name: "RecordDetail",
   props: ["record"],
   mounted() {
+    console.log("from detail", this.record);
     this.editNameValue = this.trimRecordName(this.record.name);
     this.editButton = document.querySelector(".edit");
   },

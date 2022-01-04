@@ -31,7 +31,6 @@ export default {
   },
   mounted() {
     store.dispatch("getRecording");
-    store.dispatch("getRecordNames");
   },
   methods: {
     changeDetailState(recording) {

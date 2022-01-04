@@ -2,21 +2,20 @@ export default {
   setRecords(state, records) {
     state.recordings = records;
   },
-  setRecordNames(state, recordNames) {
-    state.recordingNames = recordNames;
-  },
   addRecord(state, record) {
-    state.recordings.push(record.audio);
-    state.recordingNames.push(record.name);
-    console.log("addedRecord");
+    state.recordings.push(record);
   },
   updateRecord(state, record) {
-    state.recordingNames[record.index] = record.name;
+    //find index of original name
+    const indexToUpdate = state.recordings.findIndex(
+      (p) => p.name === record.ogName
+    );
+    //set array at index of og name to new name
+    state.recordings[indexToUpdate].name = record.name;
   },
   deleteRecord(state, recordName) {
-    let index = state.recordingNames.findIndex((p) => p == recordName);
+    let index = state.recordings.findIndex((p) => p.name == recordName);
     //remove recordings from local state
     state.recordings.splice(index, 1);
-    state.recordingNames.splice(index, 1);
   },
 };
